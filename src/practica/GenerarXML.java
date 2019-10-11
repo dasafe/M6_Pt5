@@ -1,6 +1,7 @@
 package practica;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -16,8 +17,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.Scanner;
 
 public class GenerarXML {
 
@@ -25,19 +24,37 @@ public class GenerarXML {
 
 		FileInputStream entrada = null;
 		DataInputStream fis = null;
+		Document doc = null;
+
 		try {
 			entrada = new FileInputStream("myPeople.dat");
 			fis = new DataInputStream(entrada);
-			System.out.println("Documento");
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+			doc = dBuilder.newDocument();
+
+			// Leemos el .dat y creamos la estructura del XML
+			Element departamento = doc.createElement("Personas");
+			doc.appendChild(departamento);
+			Attr attr = doc.createAttribute("Nombre");
 			while (true) {
-				System.out.println(fis.readUTF() + " - " + fis.readInt());
+				Element nombre = doc.createElement("Persona");
+				Attr attrType = doc.createAttribute("edad");
+				nombre.appendChild(doc.createTextNode(fis.readUTF()));
+				departamento.appendChild(nombre);
+				attrType.setValue(Integer.toString(fis.readInt()));
+				nombre.setAttributeNode(attrType);
 			}
+
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		} catch (EOFException e) {
-			System.out.println("Fin de fichero");
+			System.out.println("Fichero .dat leido con exito");
 		} catch (IOException e) {
 			System.out.println(e.getMessage());
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
 			try {
 				if (fis != null) {
@@ -52,55 +69,13 @@ public class GenerarXML {
 		}
 
 		try {
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			Document doc = dBuilder.newDocument();
-			// root element
-			Element rootElement = doc.createElement("Esteve_Terradas");
-			doc.appendChild(rootElement);
-
-			// M6 element
-			Element departamento = doc.createElement("Ciclos");
-			rootElement.appendChild(departamento);
-
-			// setting attribute to element
-			Attr attr = doc.createAttribute("Nombre");
-			attr.setValue("DAM");
-			departamento.setAttributeNode(attr);
-
-			// nombre element
-			Element nombre = doc.createElement("Persona");
-			Attr attrType = doc.createAttribute("rol");
-			attrType.setValue("Profesor");
-			nombre.setAttributeNode(attrType);
-			nombre.appendChild(doc.createTextNode("Rafa Aracil"));
-			departamento.appendChild(nombre);
-
-			Element nombre2 = doc.createElement("Persona");
-			Attr attrType2 = doc.createAttribute("rol");
-			attrType2.setValue("Profesor");
-			nombre2.setAttributeNode(attrType2);
-			nombre2.appendChild(doc.createTextNode("Enric Mieza"));
-			departamento.appendChild(nombre2);
-
-			Element nombre3 = doc.createElement("Persona");
-			Attr attrType3 = doc.createAttribute("rol");
-			attrType3.setValue("Alumno");
-			nombre3.setAttributeNode(attrType3);
-			nombre3.appendChild(doc.createTextNode("Juas Salas"));
-			departamento.appendChild(nombre3);
-
-			// write the content into xml file
+			// Creamos el XML
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();
 			DOMSource source = new DOMSource(doc);
-			StreamResult result = new StreamResult(new File("Instituto.xml"));
+			StreamResult result = new StreamResult(new File("personas.xml"));
 			transformer.transform(source, result);
-
-			// Output to console for testing
-			StreamResult consoleResult = new StreamResult(System.out);
-			transformer.transform(source, consoleResult);
-
+			System.out.println("XML creado con exito");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
